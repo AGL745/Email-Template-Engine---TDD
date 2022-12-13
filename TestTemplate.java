@@ -1,4 +1,5 @@
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,9 +29,17 @@ class Template {
             result = result.replaceAll(regex, entry.getValue());
         }
         
+        if (result.matches(".*\\$\\{.+\\}.*")) {
+            throw new MissingValueException();
+        }
+
         return result;
     }
 
+}
+
+class MissingValueException extends RuntimeException{
+    
 }
 
 public class TestTemplate {
@@ -53,5 +62,16 @@ public class TestTemplate {
 
     private void assertTemplateEvaluatesTo(String expected) {
         assertEquals(expected, template.evaluate());
+    }
+
+    @Test
+    public void missingValueRaisesException() throws Exception {
+        try {
+            new Template("${foo}").evaluate();
+            fail("evaluate() should throw an exception if "
+                    + "a variable was left without a value.");
+        } catch (MissingValueException expected) {
+            
+        }
     }
 }
