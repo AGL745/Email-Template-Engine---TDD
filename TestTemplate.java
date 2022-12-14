@@ -4,6 +4,8 @@ import static org.junit.Assert.fail;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -31,7 +33,7 @@ class Template {
 
     private String replaceVariables() {
         String result = templateText;
-        
+
         for(Entry<String, String> entry : variables.entrySet()) {
             String regex = "\\$\\{" + entry.getKey() + "\\}";
             result = result.replaceAll(regex, entry.getValue());
@@ -40,14 +42,20 @@ class Template {
     }
 
     private void checkForMissingValues(String result) { 
-        if (result.matches(".*\\$\\{.+\\}.*")) {
-            throw new MissingValueException();    
+        Matcher m = Pattern.compile("\\$\\{.+\\}").matcher(result);
+
+        if(m.find()) {
+            throw new MissingValueException("No value for " + m.group());
         }
     }
 
 }
 
 class MissingValueException extends RuntimeException{
+
+    public MissingValueException(String message) {
+        super(message);
+    }
     
 }
 
@@ -79,7 +87,8 @@ public class TestTemplate {
             fail("evaluate() should throw an exception if "
                     + "a variable was left without a value.");
         } catch (MissingValueException expected) {
-            
+            assertEquals("No value for ${foo}", expected.getMessage());        
         }
     }
+    
 }
